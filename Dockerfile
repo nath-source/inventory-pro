@@ -1,7 +1,7 @@
 # 1. Use PHP 8.2 with Apache
 FROM php:8.2-apache
 
-# 2. Install system packages (git, zip, etc.)
+# 2. Install system packages
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -13,13 +13,18 @@ RUN apt-get update && apt-get install -y \
     nodejs \
     npm
 
-# 3. Install PHP Extensions (pdo_mysql is vital for Aiven)
+# 3. Install PHP Extensions
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
-# 4. Apache Configuration
+# 4. Apache Configuration (UPDATED SECTION)
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf || true
+
+# --- NEW FIX: Force Apache to read .htaccess files ---
+RUN sed -i 's/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
+# -----------------------------------------------------
+
 RUN a2enmod rewrite
 
 # 5. Set Working Directory
